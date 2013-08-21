@@ -1,0 +1,75 @@
+# vim:sw=4:ts=4:expandtab:smartindent:ft=nginx
+
+# Nginx config for {{FQDN}} prod website
+
+upload_progress file_upload_{{FQDN}} 1m;
+
+upstream gunicorn_{{FQDN}} {
+  server {{socket}};
+}
+
+
+# serveur normal en non securisé
+server {
+  listen      80;
+  
+  include /etc/nginx/sites-available/{{FQDN}}.d/dynamic.conf;
+
+  {% for prefix in SECURE_PREFIX %}
+  location {{prefix}} {
+    return       301 https://$server_name$request_uri;  
+  }
+  
+  {% endfor %}
+
+  
+  location / {
+    include /etc/nginx/sites-available/{{FQDN}}.d/gunicorn.conf;
+  }
+  
+}
+
+
+# serveur de fichiers statiques en 80
+server {
+  listen      80;
+  include /etc/nginx/sites-available/{{FQDN}}.d/static.conf;
+}
+
+{% if SECURE_PREFIX %}
+# serveur en https pour le contenu dynamique
+server {
+
+  listen       443  ssl;
+
+  ssl_certificate /etc/ssl/certs/{{FQDN}}.crt;
+  ssl_certificate_key /etc/ssl/private/{{FQDN}}.key;
+  ssl_session_timeout 5m;
+
+  include /etc/nginx/sites-available/{{FQDN}}.d/dynamic.conf; 
+  
+  {% for prefix in SECURE_PREFIX %}
+  location {{prefix}} {
+
+    include /etc/nginx/sites-available/{{FQDN}}.d/gunicorn.conf;
+  }
+  {% endfor %}
+
+  location / {
+    return       301 http://$server_name$request_uri;  
+  }
+}
+
+# serveur de fichiers statiques en ssl
+server {
+
+  listen       443  ssl;
+
+  ssl_certificate /etc/ssl/certs/{{FQDN}}.crt;
+  ssl_certificate_key /etc/ssl/private/{{FQDN}}.key;
+  ssl_session_timeout 5m;
+  include /etc/nginx/sites-available/{{FQDN}}.d/static.conf;
+
+}
+
+{% endif %}

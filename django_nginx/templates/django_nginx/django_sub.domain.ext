@@ -1,0 +1,199 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:             {{FQDN}}
+# Required-Start:       $syslog $nginx
+# Required-Stop:        $syslog $nginx
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description:    the django fast_cgi portal for {{FQDN}}
+### END INIT INFO
+
+
+
+if [ -f /lib/lsb/init-functions-color ];
+then 
+  . /lib/lsb/init-functions-color
+else
+  . /lib/lsb/init-functions
+fi 
+
+
+
+
+# change on eveny new project
+PROJECT_NAME={{SITE_NAME}}
+DOMAINE={{FQDN}}
+
+# fixed 
+
+if env | grep -q "^WORKON_HOME="
+then
+  echo using $WORKON_HOME
+else
+  export WORKON_HOME="{{WORKON_HOME}}"
+fi
+
+PIDFILE=/var/run/django/$DOMAINE.pid
+LOGFILE=/var/log/nginx/$DOMAINE/gunicorn.log
+
+SOCKET={{socket}}
+
+#This is the command to be run, give the full pathname
+PROJECT_DIR={{DJANGO_ROOT}}
+{% if buildout %}
+DAEMON="$PROJECT_DIR/../../../bin/django run_gunicorn"
+{% else %}
+DAEMON="gunicorn_django"
+{% endif %}
+USER=www-data
+GROUP=www-data
+WORKERS=2
+
+# could be changed
+
+#DAEMON_OPTS="run_gunicorn --workers 1 \
+#                          --worker-connections 5 \
+#                          --daemon\
+#                          --user www-data\
+#                          --group www-data\
+#                          -t 30\
+#                          --bind unix:$SOCKET \
+#                          --pid $PIDFILE \
+#                          --error-logfile /var/log/nginx/$DOMAINE/gunicorn.log"
+#                    --daemon \
+
+
+DEBUG_ARGS="        --user=$USER \
+                    --group=$GROUP \
+                    --workers=$WORKERS \
+                    --bind $SOCKET \
+                    -t 90 \
+{% if not buildout %}                    --settings={% if buildout %}$PROJECT_NAME.{%endif%}$PROJECT_NAME.settings.prod{% endif %} \
+                    --name=$DOMAINE"
+
+DAEMON_OPTS="       $DEBUG_ARGS \
+                    --pid=$PIDFILE \
+                    --daemon \
+                    --log-file=$LOGFILE \
+                    --log-level=info"
+
+
+start()
+{
+
+  cd "$PROJECT_DIR"
+  log_begin_msg "starting django website" "$PROJECT_NAME"
+  test -d "/var/log/nginx/{{FQDN}}/" || mkdir -p "/var/log/nginx/{{FQDN}}/"
+  PIDDIRNAME=$(dirname $PIDFILE)
+  test -d "$PIDDIRNAME" || mkdir -p "$PIDDIRNAME"
+  if [ -f "$PIDFILE" ]
+  then
+    ps faux | grep -v grep | grep "$DAEMON" | grep `cat $PIDFILE` > /dev/null
+    if [ $? -eq 0 ]
+    then
+      log_failure_msg "fichier pid deja present avec un pid existant"
+      log_end_msg 1
+      return 1
+    fi
+    rm "$PIDFILE"
+    log_warning_msg "pid file deja existant"
+  fi
+  {% if buildout %}
+  if [ ! -z  "$DEBUG" ] ;
+  then
+    echo $DAEMON $DEBUG_ARGS
+    $DAEMON $DEBUG_ARGS
+  else
+    source $WORKON_HOME/buildout/bin/activate
+    $DAEMON $DAEMON_OPTS
+  fi
+  {% else %}
+  if [ -f "$WORKON_HOME/$DOMAINE/bin/activate" ];
+  then
+    . $WORKON_HOME/$DOMAINE/bin/activate 
+  else
+    echo "impossible d'activer l'environement $WORKON_HOME/{{FQDN}}/bin/activate"
+    exit 1
+  fi
+
+  if [ ! -z  "$DEBUG" ] ;
+  then
+    echo "sourcing $WORKON_HOME/$DOMAINE/bin/activate "
+    echo $DAEMON $DEBUG_ARGS
+    $DAEMON $DEBUG_ARGS
+  else
+    $DAEMON $DAEMON_OPTS
+  fi
+  {% endif %}
+
+  if [ $? -eq 0 ]
+  then
+    log_end_msg 0
+  else
+    log_end_msg 1
+  fi
+    
+
+}
+
+stop()
+{
+  log_begin_msg "stoping django website" "$PROJECT_NAME"
+  if [ -f  "$PIDFILE" ]
+  then
+    start-stop-daemon --oknodo --stop --quiet --pidfile $PIDFILE 2> /dev/null
+    rm "$PIDFILE"
+    log_end_msg 0
+  else
+    log_failure_msg "pid file absent for $PROJECT_NAME django website"
+    #log_end_msg 1
+  fi
+
+}
+
+status()
+{
+  if [ -f "$PIDFILE" ]
+  then
+    # fichier pid existant
+    ps faux | grep -v grep | grep $DAEMON | grep `cat $PIDFILE` > /dev/null
+    if [ $? -eq 0 ]
+    then
+      echo "$PROJECT_NAME django website running"
+    else
+      echo "WARN !! pid file present but $PROJECT_NAME django website stopped"
+    fi
+  else
+    ps faux | grep -v grep | grep $DAEMON > /dev/null
+    if [ $? -eq 0 ]
+    then
+      echo "WARN !! $PROJECT_NAME django website apear to be running but don't have a PID FILE"
+    else
+      echo "$PROJECT_NAME django website stopped"
+    fi
+  fi
+}
+
+case "$1" in
+  start)
+    start
+  ;;
+  stop)
+    stop
+  ;;
+  restart)
+    stop
+    sleep 2
+    start
+  ;;
+  status)
+    status
+  ;;
+
+  *)
+  echo "Usage: "$1" {start|stop|restart|status}"
+  exit 1
+esac
+
+exit 0
