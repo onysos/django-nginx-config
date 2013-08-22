@@ -41,7 +41,7 @@ usage
 -----
 
 (manage.py|bin/django) create_nginx_config [destination dirrectory] [--socket=path/to/socket] [--workon_home=/path/to/workonhome]  
-[--setting=NAME=VALUE] [--no-buildout]
+[--forcesetting=NAME=VALUE] [--no-buildout]
 
 all settings can be overriten by --settings.
 ie : FQDN is lol.ox.com  => --setting=FQDN=lol.ox.com

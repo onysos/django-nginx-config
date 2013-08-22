@@ -33,11 +33,11 @@ class Command(BaseCommand):
             default=None,
             help='the directory of the workon home (where is located all virtualenv)'),
 
-        make_option('--setting',
+        make_option('--forcesetting',
             action='append',
             dest='extra_settings',
             default=[],
-            help='overide a value defaulted by the settings value. ie: --setting=FQDN=myproj.exemple.com'),
+            help='overide a value defaulted by the settings value. ie: --forcesetting=FQDN=myproj.exemple.com'),
          make_option('--no-buildout',
             action='store_true',
             dest='buildout',
@@ -112,7 +112,9 @@ class Command(BaseCommand):
                         self.stderr.write('setting {0} absent from settings. try to ovenride it with --setting={0}=FOO'.format(settingsname))
 
             else:
-
+                if extra_settings.has_key(res):
+                    context[res] = extra_settings[res]
+                    continue
                 try:
                     settingsname = res
                     context[settingsname] = getattr(settings, settingsname)
