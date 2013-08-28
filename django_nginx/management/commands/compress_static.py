@@ -40,20 +40,27 @@ class Command(BaseCommand):
             for root, _, files in os.walk(dirpath):
                 logger.debug("in dir : %s" % root)
                 for filename in files:
-                    fullpath = os.path.join(root, filename)
-                    if not options["clear"]:
-                        if filename.endswith(".css") or filename.endswith(".js"):
-                            try:
-                                with open(fullpath) as file_in, gzip.open("%s.gz" % fullpath, "wb") as file_gz:
-                                    file_gz.write(file_in.read())
-                                    logger.debug("compressing %s" % fullpath)
-                            except OSError, e:
-                                logger.warning("impossible to compress %s : %s " % (filename, e))
-                    else:
-                        if filename.endswith(".gz"):
-                            try:
-                                logger.debug("removing %s" % filename)
-                                os.remove(fullpath)
-                            except:
-                                logger.warning("impossible to delete gziped file %s" % fullpath)
+                    filename = filename.decode("utf-8")
+                    try:
+                        fullpath = os.path.join(root, filename)
+                        if not options["clear"]:
+                            if filename.endswith(".css") or filename.endswith(".js"):
+                                try:
+                                    with open(fullpath) as file_in, gzip.open("%s.gz" % fullpath, "wb") as file_gz:
+                                        file_gz.write(file_in.read())
+                                        logger.debug("compressing %s" % fullpath)
+                                except OSError, e:
+                                    logger.warning("impossible to compress %s : %s " % (filename, e))
+                        else:
+                            if filename.endswith(".gz"):
+                                try:
+                                    logger.debug("removing %s" % filename)
+                                    os.remove(fullpath)
+                                except:
+                                    logger.warning("impossible to delete gziped file %s" % fullpath)
+                    except:
+                        msg = "error durring compressing file %r" % filename
+                        logger.exception(msg)
+                        self.stderr.write(msg)
+                        raise
 
