@@ -35,7 +35,7 @@ else
 fi
 
 PIDFILE=/var/run/django/$DOMAINE.pid
-LOGFILE=/var/log/nginx/$DOMAINE/gunicorn.log
+LOGFILE=/var/log/django/$DOMAINE/gunicorn.log
 
 SOCKET={{socket}}
 
