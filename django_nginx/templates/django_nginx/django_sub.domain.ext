@@ -105,7 +105,6 @@ start()
     echo $DAEMON $DEBUG_ARGS
     $DAEMON $DEBUG_ARGS
   else
-    source $WORKON_HOME/buildout/bin/activate
     $DAEMON $DAEMON_OPTS
   fi
   {% else %}
