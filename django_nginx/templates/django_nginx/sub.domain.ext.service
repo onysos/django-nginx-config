@@ -1,0 +1,10 @@
+[Unit]
+Description=gunicorn daemon for {{FQDN}}
+
+[Service]
+User=www-data
+WorkingDirectory={{DJANGO_ROOT}}
+ExecStart={{DJANGO_ROOT}}/../../../bin/django run_gunicorn --workers=2  --log-level=info --bing {{socket}}
+
+[Install]
+WantedBy=multi-user.target

@@ -66,7 +66,9 @@ class Command(BaseCommand):
                       "sub.domain.ext.d/gunicorn.conf",
                       "sub.domain.ext.d/extra/di.maintenance.conf",
                       "sub.domain.ext.d/switch_maintenance.sh",
-                      "django_sub.domain.ext"
+                      "django_sub.domain.ext",
+                      "sub.domain.ext.service",
+                      "sub.domain.ext.socket",
 
                       )
 
@@ -126,9 +128,10 @@ class Command(BaseCommand):
             raise CommandError("dont continu because of previous settings missing")
 
         socket = socket.format(fqdn=context["FQDN"])
-
+        context["socket_path"] = socket
         if socket.startswith("/"):
             context["socket"] = "unix:%s" % socket
+
         else:
             context["socket"] = socket
 
