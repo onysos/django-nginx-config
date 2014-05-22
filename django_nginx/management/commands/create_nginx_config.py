@@ -13,6 +13,7 @@ from django.template.context import Context
 import shutil
 from pprint import pprint
 import codecs
+import itertools
 logger = logging.getLogger(__name__)
 
 
@@ -38,7 +39,12 @@ class Command(BaseCommand):
             dest='extra_settings',
             default=[],
             help='overide a value defaulted by the settings value. ie: --forcesetting=FQDN=myproj.exemple.com'),
-         make_option('--no-buildout',
+        make_option('--type',
+            action='store',
+            dest='type',
+            default="all",
+            help='the type of files to create. on of [ nginx, systemd, init, all ]'),
+        make_option('--no-buildout',
             action='store_true',
             dest='buildout',
             default=False,
@@ -59,16 +65,17 @@ class Command(BaseCommand):
                            ("MEDIA_ROOT"),
                            )
 
-    template_files = (
-                      "sub.domain.ext",
+    template_files = dict(
+
+                      nginx=["sub.domain.ext",
                       "sub.domain.ext.d/dynamic.conf",
                       "sub.domain.ext.d/static.conf",
                       "sub.domain.ext.d/gunicorn.conf",
                       "sub.domain.ext.d/extra/di.maintenance.conf",
-                      "sub.domain.ext.d/switch_maintenance.sh",
-                      "django_sub.domain.ext",
-                      "sub.domain.ext.service",
-                      "sub.domain.ext.socket",
+                      "sub.domain.ext.d/switch_maintenance.sh"],
+                      init=["django_sub.domain.ext"],
+                      systemd=["sub.domain.ext.service",
+                      "sub.domain.ext.socket"],
 
                       )
 
@@ -156,7 +163,15 @@ class Command(BaseCommand):
         except OSError:
             pass
 
-        for template_file in self.template_files:
+        files = []
+        if options["type"] == "all":
+            files = itertools.chain(self.template_files.values())
+        else:
+            try:
+                files = self.template_files[options["type"]]
+            except KeyError:
+                raise CommandError("ce type de fichie n'existe pas : %s n'est pas parmis %s" % (options["type"], self.template_files.keys()))
+        for template_file in files:
             with codecs.open(template_file.replace("sub.domain.ext", context["FQDN"]), "w", encoding="utf-8") as output:
                 template = loader.get_template("django_nginx/%s" % template_file)
                 print("writing %s" % os.path.join(dest, output.name))
