@@ -87,7 +87,7 @@ class Command(BaseCommand):
         socket = options["socket"]
         buildout = not options["buildout"]
         workon_home = options["workon_home"]
-        if workon_home is None:
+        if workon_home is None and not buildout:
             try:
                 workon_home = os.environ["WORKON_HOME"]
                 self.stderr.write("guesing workon home with environ : %s" % workon_home)
@@ -100,8 +100,11 @@ class Command(BaseCommand):
             splited = opt_settings.split("=")
             extra_settings[splited[0]] = "=".join(splited[1:])
 
-        context = {"buildout": buildout,
-                   "WORKON_HOME": workon_home}
+        context = {
+                   "buildout": buildout,
+                   "WORKON_HOME": workon_home,
+                   "ROOT_NGINX_PATH": os.path.abspath(dest)
+                   }
 
         errors = False
         for res in self.taken_from_settings:

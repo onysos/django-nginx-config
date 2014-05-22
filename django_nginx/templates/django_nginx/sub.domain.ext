@@ -13,7 +13,7 @@ upstream gunicorn_{{FQDN}} {
 server {
   listen      80;
   
-  include /etc/nginx/sites-available/{{FQDN}}.d/dynamic.conf;
+  include {{ROOT_NGINX_PATH}}/{{FQDN}}.d/dynamic.conf;
 
   {% for prefix in SECURE_PREFIX %}
   location {{prefix}} {
@@ -24,7 +24,7 @@ server {
 
   
   location / {
-    include /etc/nginx/sites-available/{{FQDN}}.d/gunicorn.conf;
+    include {{ROOT_NGINX_PATH}}/{{FQDN}}.d/gunicorn.conf;
   }
   
 }
@@ -33,7 +33,7 @@ server {
 # serveur de fichiers statiques en 80
 server {
   listen      80;
-  include /etc/nginx/sites-available/{{FQDN}}.d/static.conf;
+  include {{ROOT_NGINX_PATH}}/{{FQDN}}.d/static.conf;
 }
 
 {% if SECURE_PREFIX %}
@@ -46,12 +46,12 @@ server {
   ssl_certificate_key /etc/ssl/private/{{FQDN}}.key;
   ssl_session_timeout 5m;
 
-  include /etc/nginx/sites-available/{{FQDN}}.d/dynamic.conf; 
+  include {{ROOT_NGINX_PATH}}/{{FQDN}}.d/dynamic.conf; 
   
   {% for prefix in SECURE_PREFIX %}
   location {{prefix}} {
 
-    include /etc/nginx/sites-available/{{FQDN}}.d/gunicorn.conf;
+    include {{ROOT_NGINX_PATH}}/{{FQDN}}.d/gunicorn.conf;
   }
   {% endfor %}
 
@@ -68,7 +68,7 @@ server {
   ssl_certificate /etc/ssl/certs/{{FQDN}}.crt;
   ssl_certificate_key /etc/ssl/private/{{FQDN}}.key;
   ssl_session_timeout 5m;
-  include /etc/nginx/sites-available/{{FQDN}}.d/static.conf;
+  include {{ROOT_NGINX_PATH}}/{{FQDN}}.d/static.conf;
 
 }
 
