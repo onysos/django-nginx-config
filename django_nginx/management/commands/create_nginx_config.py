@@ -49,8 +49,12 @@ class Command(BaseCommand):
             dest='buildout',
             default=False,
             help="don't set path as if project was in a buildout cookpot"),
-
-        )
+         make_option('--log-dir',
+            action='store',
+            dest='log-dir',
+            default=None,
+            help="l'emplacement des fichiers log a génére [/var/log/nginx/{FQDN}/]"),
+        )  #
 
     taken_from_settings = (
                            # (settings name, default value),
@@ -103,7 +107,8 @@ class Command(BaseCommand):
         context = {
                    "buildout": buildout,
                    "WORKON_HOME": workon_home,
-                   "ROOT_NGINX_PATH": os.path.abspath(dest)
+                   "ROOT_NGINX_PATH": os.path.abspath(dest),
+
                    }
 
         errors = False
@@ -144,6 +149,10 @@ class Command(BaseCommand):
 
         else:
             context["socket"] = socket
+        context["NGINX_LOG_DIR"] = "/var/log/nginx/{fqdn}/".format(fqdn=context["FQDN"])
+        if options["log-dir"]:
+            context["NGINX_LOG_DIR"] = options["log-dir"]
+
 
         self.stdout.write("context variable used :")
         pprint(context)
