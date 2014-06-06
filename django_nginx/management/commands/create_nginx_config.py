@@ -177,7 +177,7 @@ class Command(BaseCommand):
 
         files = []
         if options["type"] == "all":
-            files = itertools.chain(self.template_files.values())
+            files = itertools.chain(*self.template_files.values())
         else:
             try:
                 files = self.template_files[options["type"]]
