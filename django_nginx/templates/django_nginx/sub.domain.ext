@@ -2,7 +2,10 @@
 
 # Nginx config for {{FQDN}} prod website
 
+{% if upload %}
 upload_progress file_upload_{{FQDN}} 1m;
+{% endif %}
+
 
 upstream gunicorn_{{FQDN}} {
   server {{socket}};

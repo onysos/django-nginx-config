@@ -49,6 +49,11 @@ class Command(BaseCommand):
             dest='buildout',
             default=False,
             help="don't set path as if project was in a buildout cookpot"),
+        make_option('--no-upload-progress',
+            action='store_true',
+            dest='no_upload',
+            default=False,
+            help="disable upload-progress directive for nginx if this one don't support upload-progress module"),
          make_option('--log-dir',
             action='store',
             dest='log-dir',
@@ -152,7 +157,7 @@ class Command(BaseCommand):
         context["NGINX_LOG_DIR"] = "/var/log/nginx/{fqdn}/".format(fqdn=context["FQDN"])
         if options["log-dir"]:
             context["NGINX_LOG_DIR"] = options["log-dir"]
-
+        context["upload"] = not options["no_upload"]
 
         self.stdout.write("context variable used :")
         pprint(context)
