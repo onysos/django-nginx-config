@@ -10,6 +10,10 @@ import logging
 from django.test.client import Client
 import os
 import codecs
+from django.template.loader import get_template
+from django.template.context import RequestContext
+from django.http.request import HttpRequest
+from django.template.base import TemplateDoesNotExist
 logger = logging.getLogger(__name__)
 from django.core.management.base import BaseCommand
 from optparse import make_option
@@ -31,16 +35,18 @@ class Command(BaseCommand):
         url = "/error/{code}.html"
         output = options["output"] or os.getcwd()
         for code in args:
-            url_res = url.format(code=code)
-            r = client.get(url_res)
-            if r.status_code == 200:
-                dest = os.path.join(output, "error{code}.html".format(code=code))
+
+            dest = os.path.join(output, "error{code}.html".format(code=code))
+            try:
+                t = get_template("{code}.html".format(code=code))
+                r = HttpRequest()
+                res = t.render(RequestContext(r))
                 # with codecs.open(dest, "w", encoding="utf-8") as f:
-                with open(dest, "w") as f:
-                    f.write(r.content)
+                with open(dest, "wb") as f:
+                    f.write(res.encode("utf-8"))
                 self.stdout.write("fichier %s créé" % dest)
-            else:
-                self.stderr.write("erreur %s sur le code %s (%s)" % (r.status_code, code, url_res))
+            except TemplateDoesNotExist:
+                self.stderr.write("pas de template %s.html" % code)
 
 
 
