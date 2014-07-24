@@ -59,7 +59,7 @@ server {
   {% endfor %}
 
   location / {
-    return       301 http://$server_name$request_uri;  
+    include {{ROOT_NGINX_PATH}}/{{FQDN}}.d/gunicorn.conf;  
   }
 }
 
