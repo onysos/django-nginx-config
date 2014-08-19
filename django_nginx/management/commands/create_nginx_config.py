@@ -81,6 +81,7 @@ class Command(BaseCommand):
                       "sub.domain.ext.d/static.conf",
                       "sub.domain.ext.d/gunicorn.conf",
                       "sub.domain.ext.d/extra/di.maintenance.conf",
+                      "sub.domain.ext.d/extra/di.xsendfile.conf",
                       "sub.domain.ext.d/switch_maintenance.sh"],
                       init=["django_sub.domain.ext"],
                       systemd=["sub.domain.ext.service",
