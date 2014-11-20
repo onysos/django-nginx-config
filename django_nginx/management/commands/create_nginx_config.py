@@ -14,6 +14,7 @@ import shutil
 from pprint import pprint
 import codecs
 import itertools
+import re
 logger = logging.getLogger(__name__)
 
 
@@ -79,6 +80,7 @@ class Command(BaseCommand):
                       nginx=["sub.domain.ext",
                       "sub.domain.ext.d/dynamic.conf",
                       "sub.domain.ext.d/static.conf",
+                      "sub.domain.ext.d/static_location.conf",
                       "sub.domain.ext.d/gunicorn.conf",
                       "sub.domain.ext.d/extra/di.maintenance.conf",
                       "sub.domain.ext.d/extra/di.xsendfile.conf",
@@ -109,13 +111,26 @@ class Command(BaseCommand):
         for opt_settings in options["extra_settings"]:
             splited = opt_settings.split("=")
             extra_settings[splited[0]] = "=".join(splited[1:])
+        regexp_external_url = re.compile("(https?)?://(?P<domain>[^/]+)/")
+        match_static = regexp_external_url.match(settings.STATIC_URL)
+        match_media = regexp_external_url.match(settings.MEDIA_URL)
+        print settings.STATIC_URL
+        print settings.MEDIA_URL
+        if (match_static is not None) != (match_media is not None):
+            raise CommandError("impossible de détérminer le domaine pour les fichiers static. votre MEDIA_URL et STATIC_URL ne concorde pas")
+        if match_static is not None:
+            if match_static.groupdict()["domain"] != match_media.groupdict()["domain"]:
+                raise CommandError("impossible de détérminer le domaine pour les fichiers static. votre MEDIA_URL et STATIC_URL ne concorde pas")
+            static_domain = match_media.groupdict()["domain"]
+        else:
+            static_domain = False
 
         context = {
-                   "buildout": buildout,
-                   "WORKON_HOME": workon_home,
-                   "ROOT_NGINX_PATH": os.path.abspath(dest),
-
-                   }
+            "buildout": buildout,
+            "WORKON_HOME": workon_home,
+            "ROOT_NGINX_PATH": os.path.abspath(dest),
+            "static_domain": static_domain
+        }
 
         errors = False
         for res in self.taken_from_settings:
