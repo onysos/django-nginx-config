@@ -20,76 +20,87 @@ logger = logging.getLogger(__name__)
 
 from optparse import make_option
 
+
 class Command(BaseCommand):
     args = '<destination>'
     help = 'generate a ready-to-use nginx config for the current project'
     option_list = BaseCommand.option_list + (
-        make_option('--socket',
+        make_option(
+            '--socket',
             action='store',
             dest='socket',
             default="/var/run/django/{fqdn}.sock",
             help='the socket to use to contact gunicorn. can add {fqdn} to insert FQDN. default to /var/run/django/{fqdn}.sock'),
-        make_option('--workon_home',
+        make_option(
+            '--workon_home',
             action='store',
             dest='workon_home',
             default=None,
             help='the directory of the workon home (where is located all virtualenv)'),
 
-        make_option('--forcesetting',
+        make_option(
+            '--forcesetting',
             action='append',
             dest='extra_settings',
             default=[],
             help='overide a value defaulted by the settings value. ie: --forcesetting=FQDN=myproj.exemple.com'),
-        make_option('--type',
+        make_option(
+            '--type',
             action='store',
             dest='type',
             default="all",
             help='the type of files to create. on of [ nginx, systemd, init, all ]'),
-        make_option('--no-buildout',
+        make_option(
+            '--no-buildout',
             action='store_true',
             dest='buildout',
             default=False,
             help="don't set path as if project was in a buildout cookpot"),
-        make_option('--no-upload-progress',
+        make_option(
+            '--no-upload-progress',
             action='store_true',
             dest='no_upload',
             default=False,
             help="disable upload-progress directive for nginx if this one don't support upload-progress module"),
-         make_option('--log-dir',
+        make_option(
+            '--log-dir',
             action='store',
             dest='log-dir',
             default=None,
             help="l'emplacement des fichiers log a génére [/var/log/nginx/{FQDN}/]"),
-        )  #
+    )  #
 
     taken_from_settings = (
-                           # (settings name, default value),
-                           ("ADMINISTRATOR_IP", "127.0.0.1"),
-                           ("FQDN"),
-                           ("SITE_NAME"),
-                           ("DOMAIN_NAME"),
-                           ("ADMINISTRATOR_IP"),
-                           ("DJANGO_ROOT"),
-                           ("SECURE_PREFIX"),
-                           ("STATIC_ROOT"),
-                           ("MEDIA_ROOT"),
-                           )
+        # (settings name, default value),
+        ("ADMINISTRATOR_IP", "127.0.0.1"),
+        ("FQDN"),
+        ("SITE_NAME"),
+        ("DOMAIN_NAME"),
+        ("ADMINISTRATOR_IP"),
+        ("DJANGO_ROOT"),
+        ("SECURE_PREFIX"),
+        ("STATIC_ROOT"),
+        ("MEDIA_ROOT"),
+    )
 
     template_files = dict(
 
-                      nginx=["sub.domain.ext",
-                      "sub.domain.ext.d/dynamic.conf",
-                      "sub.domain.ext.d/static.conf",
-                      "sub.domain.ext.d/static_location.conf",
-                      "sub.domain.ext.d/gunicorn.conf",
-                      "sub.domain.ext.d/extra/di.maintenance.conf",
-                      "sub.domain.ext.d/extra/di.xsendfile.conf",
-                      "sub.domain.ext.d/switch_maintenance.sh"],
-                      init=["django_sub.domain.ext"],
-                      systemd=["sub.domain.ext.service",
-                      "sub.domain.ext.socket"],
-
-                      )
+        nginx=[
+            "sub.domain.ext",
+            "sub.domain.ext.d/dynamic.conf",
+            "sub.domain.ext.d/static.conf",
+            "sub.domain.ext.d/static_location.conf",
+            "sub.domain.ext.d/gunicorn.conf",
+            "sub.domain.ext.d/extra/di.maintenance.conf",
+            "sub.domain.ext.d/extra/di.xsendfile.conf",
+            "sub.domain.ext.d/switch_maintenance.sh"
+        ],
+        init=["django_sub.domain.ext"],
+        systemd=[
+            "sub.domain.ext.service",
+            "sub.domain.ext.socket"
+        ],
+    )
 
     def handle(self, *args, **options):
         if len(args) > 0:
@@ -134,7 +145,7 @@ class Command(BaseCommand):
         errors = False
         for res in self.taken_from_settings:
             if isinstance(res, (tuple, list)):
-                if extra_settings.has_key(res[0]):
+                if res[0] in extra_settings:
                     context[res[0]] = extra_settings[res[0]]
                     continue
                 try:
@@ -149,7 +160,7 @@ class Command(BaseCommand):
                         self.stderr.write('setting {0} absent from settings. try to ovenride it with --setting={0}=FOO'.format(settingsname))
 
             else:
-                if extra_settings.has_key(res):
+                if res in extra_settings:
                     context[res] = extra_settings[res]
                     continue
                 try:
@@ -210,4 +221,3 @@ class Command(BaseCommand):
                 output.write(template.render(tmpl_context))
 
         self.stderr.write("done")
-
