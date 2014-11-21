@@ -111,11 +111,10 @@ class Command(BaseCommand):
         for opt_settings in options["extra_settings"]:
             splited = opt_settings.split("=")
             extra_settings[splited[0]] = "=".join(splited[1:])
-        regexp_external_url = re.compile("(https?)?://(?P<domain>[^/]+)/")
+        regexp_external_url = re.compile("(https?:)?//(?P<domain>[^/]+)/")
         match_static = regexp_external_url.match(settings.STATIC_URL)
         match_media = regexp_external_url.match(settings.MEDIA_URL)
-        print settings.STATIC_URL
-        print settings.MEDIA_URL
+
         if (match_static is not None) != (match_media is not None):
             raise CommandError("impossible de détérminer le domaine pour les fichiers static. votre MEDIA_URL et STATIC_URL ne concorde pas")
         if match_static is not None:
