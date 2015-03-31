@@ -3,7 +3,7 @@ import os
 
 
 setup(name='django-nginx-config',
-      version='0.1',
+      version='0.2',
       description='an easy to use nginx config generator for django project',
       author='Darius BERNARD',
       author_email='contact@onysos.fr',
