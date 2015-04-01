@@ -1,2 +1,2 @@
 recursive-include docs *
-recursive-include django_nginx/management/* *
+recursive-include django_nginx/static/* *
