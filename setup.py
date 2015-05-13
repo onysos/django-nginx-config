@@ -45,7 +45,7 @@ for dirpath, dirnames, filenames in os.walk("django_nginx"):
         package_files.extend([os.path.join(path, f) for f in filenames])
 
 setup(name='django-nginx-config',
-      version='0.3',
+      version='0.4',
       description='an easy to use nginx config generator for django project',
       author='Darius BERNARD',
       author_email='contact@onysos.fr',
