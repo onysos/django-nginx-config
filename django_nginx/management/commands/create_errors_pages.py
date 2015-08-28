@@ -7,9 +7,7 @@ Created on 15 juil. 2014
 """
 from __future__ import unicode_literals
 import logging
-from django.test.client import Client
 import os
-import codecs
 from django.template.loader import get_template
 from django.template.context import RequestContext
 from django.http.request import HttpRequest
@@ -31,7 +29,7 @@ class Command(BaseCommand):
 
         )
     def handle(self, *args, **options):
-        client = Client()
+
         url = "/error/{code}.html"
         output = options["output"] or os.getcwd()
         for code in args:
