@@ -81,6 +81,7 @@ class Command(BaseCommand):
         ("SECURE_PREFIX"),
         ("STATIC_ROOT"),
         ("MEDIA_ROOT"),
+        ("static_domain"),
     )
 
     template_files = dict(
